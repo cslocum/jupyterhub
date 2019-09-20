@@ -182,6 +182,8 @@ class User(Base):
     admin = Column(Boolean, default=False)
     created = Column(DateTime, default=datetime.utcnow)
     last_activity = Column(DateTime, nullable=True)
+    logged_in_time = Column(DateTime, nullable=True)
+    logged_in_duration = Column(Unicode(255), nullable=True)
 
     api_tokens = relationship("APIToken", backref="user", cascade="all, delete-orphan")
     oauth_tokens = relationship(
