@@ -90,7 +90,6 @@ class LogoutHandler(BaseHandler):
         user = self._jupyterhub_user
 
         duration = str(datetime.now() - user.orm_user.logged_in_time)
-        self.log.info('send logged in duration metric..............%s' %duration)
 
         USER_LOGGED_IN_TIME.info({
             'user': user.name,
