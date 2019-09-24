@@ -2304,7 +2304,6 @@ class JupyterHub(Application):
         await self.proxy.check_routes(self.users, self._service_map, routes)
 
     async def update_user_logged_in_time(self):
-    def update_user_logged_in_time(self):
         """ Track how long a user has been logged in"""
         now = datetime.utcnow()
         for orm_user in self.db.query(orm.User):
