@@ -42,10 +42,7 @@ RUNNING_SERVERS = Gauge(
 
 TOTAL_USERS = Gauge('total_users', 'total number of users')
 
-USER_LOGGED_IN_TIME = Info(
-    'user_logged_in_time',
-    'time user has been logged in'
-)
+USER_LOGGED_IN_TIME = Info('user_logged_in_time', 'time user has been logged in')
 
 CHECK_ROUTES_DURATION_SECONDS = Histogram(
     'check_routes_duration_seconds', 'Time taken to validate all routes in proxy'

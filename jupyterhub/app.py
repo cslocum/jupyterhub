@@ -344,7 +344,7 @@ class JupyterHub(Application):
         300, help="Interval (in seconds) at which to update last-activity timestamps."
     ).tag(config=True)
     user_logged_in_time_interval = Integer(
-        10, help="Interval (in seconds) at which to update user logged-in time."
+        30, help="Interval (in seconds) at which to update user logged-in time."
     ).tag(config=True)
     proxy_check_interval = Integer(
         30, help="Interval (in seconds) at which to check if the proxy is running."
@@ -2252,7 +2252,7 @@ class JupyterHub(Application):
             f.write(config_text)
 
     async def update_last_activity(self):
-        """Update User.last_activity and User.logged_in_duration timestamps from the proxy"""
+        """Update User.last_activity timestamps from the proxy"""
         routes = await self.proxy.get_all_routes()
         users_count = 0
         active_users_count = 0
@@ -2303,14 +2303,12 @@ class JupyterHub(Application):
 
         await self.proxy.check_routes(self.users, self._service_map, routes)
 
-
     async def update_user_logged_in_time(self):
+    def update_user_logged_in_time(self):
         """ Track how long a user has been logged in"""
         now = datetime.utcnow()
         for orm_user in self.db.query(orm.User):
             user = self.users[orm_user]
-            self.log.debug("IN update_user_logged_in_time")
-
             if user.logged_in_time:
                 user.logged_in_duration = str(now - user.logged_in_time)
             else:
@@ -2320,9 +2318,9 @@ class JupyterHub(Application):
                     'user': str(user.name),
                     'logged_in_time': str(user.logged_in_duration)
                 })
-            self.log.info('')
-            self.log.info('USER LOGGED IN DURATION: %s' %str(user.logged_in_duration))
-            self.log.info('')
+                self.log.info('USER LOGGED IN DURATION FOR %s: %s' %(
+                    str(user.name), str(user.logged_in_duration))
+                )
 
             try:
                 self.db.commit()
