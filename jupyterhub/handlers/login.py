@@ -2,6 +2,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
+from datetime import datetime
 
 from tornado import web
 from tornado.escape import url_escape
@@ -9,6 +10,8 @@ from tornado.httputil import url_concat
 
 from ..utils import maybe_future
 from .base import BaseHandler
+
+from ..metrics import USER_LOGGED_IN_TIME
 
 
 class LogoutHandler(BaseHandler):
@@ -81,6 +84,18 @@ class LogoutHandler(BaseHandler):
         """Log the user out, call the custom action, forward the user
             to the logout page
         """
+
+        # definitely a hack here, I just happen to know that this variable is
+        # defined at this point in execution, but it's not at all robust
+        user = self._jupyterhub_user
+
+        duration = str(datetime.now() - user.orm_user.logged_in_time)
+
+        USER_LOGGED_IN_TIME.info({
+            'user': user.name,
+            'logged_in_time': duration
+        })
+        
         await self.default_handle_logout()
         await self.handle_logout()
         await self.render_logout_page()

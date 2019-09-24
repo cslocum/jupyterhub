@@ -696,6 +696,7 @@ class BaseHandler(RequestHandler):
             self.statsd.timing('login.authenticate.success', auth_timer.ms)
             self.log.info("User logged in: %s", user.name)
             user._auth_refreshed = time.monotonic()
+            user.orm_user.logged_in_time = datetime.now()
             return user
         else:
             self.statsd.incr('login.failure')
