@@ -342,7 +342,6 @@ class JupyterHub(Application):
     last_activity_interval = Integer(
         300, help="Interval (in seconds) at which to update last-activity timestamps."
     ).tag(config=True)
-
     proxy_check_interval = Integer(
         30, help="Interval (in seconds) at which to check if the proxy is running."
     ).tag(config=True)
@@ -1597,7 +1596,7 @@ class JupyterHub(Application):
         # and persist across sessions.
         for user in db.query(orm.User):
             try:
-                maybe_future(self.authenticator.add_user(user))
+                await maybe_future(self.authenticator.add_user(user))
             except Exception:
                 self.log.exception("Error adding user %s already in db", user.name)
                 if self.authenticator.delete_invalid_users:

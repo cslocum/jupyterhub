@@ -105,16 +105,6 @@ class LogoutHandler(BaseHandler):
 class LoginHandler(BaseHandler):
     """Render the login page."""
 
-    '''
-    # no, this is not a coroutine, but it should be...
-    def send_logged_in_metric(self, username):
-        self.log.info('IN send_logged_in_metric..............')
-        USER_LOGGED_IN_TIME.info({
-            'user': str(username),
-            'logged_in_time': str(datetime.datetime.now())
-        })
-    '''
-
     def _render(self, login_error=None, username=None):
         return self.render_template(
             'login.html',
@@ -126,7 +116,7 @@ class LoginHandler(BaseHandler):
             authenticator_login_url=url_concat(
                 self.authenticator.login_url(self.hub.base_url),
                 {'next': self.get_argument('next', '')},
-            )
+            ),
         )
 
     async def get(self):
