@@ -150,6 +150,7 @@ class User:
     log = app_log
     settings = None
     _auth_refreshed = None
+    logged_in_time = None
 
     def __init__(self, orm_user, settings=None, db=None):
         self.db = db or inspect(orm_user).session

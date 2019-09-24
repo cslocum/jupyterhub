@@ -81,7 +81,6 @@ from .utils import (
 )
 from .metrics import RUNNING_SERVERS
 from .metrics import TOTAL_USERS
-from .metrics import USER_LOGGED_IN_TIME
 
 # classes for config
 from .auth import Authenticator, PAMAuthenticator
@@ -343,9 +342,7 @@ class JupyterHub(Application):
     last_activity_interval = Integer(
         300, help="Interval (in seconds) at which to update last-activity timestamps."
     ).tag(config=True)
-    user_logged_in_time_interval = Integer(
-        30, help="Interval (in seconds) at which to update user logged-in time."
-    ).tag(config=True)
+
     proxy_check_interval = Integer(
         30, help="Interval (in seconds) at which to check if the proxy is running."
     ).tag(config=True)
@@ -1600,7 +1597,7 @@ class JupyterHub(Application):
         # and persist across sessions.
         for user in db.query(orm.User):
             try:
-                await maybe_future(self.authenticator.add_user(user))
+                maybe_future(self.authenticator.add_user(user))
             except Exception:
                 self.log.exception("Error adding user %s already in db", user.name)
                 if self.authenticator.delete_invalid_users:
@@ -2303,31 +2300,6 @@ class JupyterHub(Application):
 
         await self.proxy.check_routes(self.users, self._service_map, routes)
 
-    async def update_user_logged_in_time(self):
-        """ Track how long a user has been logged in"""
-        now = datetime.utcnow()
-        for orm_user in self.db.query(orm.User):
-            user = self.users[orm_user]
-            if user.logged_in_time:
-                user.logged_in_duration = str(now - user.logged_in_time)
-            else:
-                user.logged_in_time = now
-            if user.logged_in_duration:
-                USER_LOGGED_IN_TIME.info({
-                    'user': str(user.name),
-                    'logged_in_time': str(user.logged_in_duration)
-                })
-                self.log.info('USER LOGGED IN DURATION FOR %s: %s' %(
-                    str(user.name), str(user.logged_in_duration))
-                )
-
-            try:
-                self.db.commit()
-            except SQLAlchemyError:
-                self.log.exception("Rolling back session due to database error")
-                self.db.rollback()
-                return
-
     async def start(self):
         """Start the whole thing"""
         self.io_loop = loop = IOLoop.current()
@@ -2473,13 +2445,6 @@ class JupyterHub(Application):
                 self.update_last_activity, 1e3 * self.last_activity_interval
             )
             self.last_activity_callback = pc
-            pc.start()
-
-        if self.user_logged_in_time_interval:
-            pc = PeriodicCallback(
-                self.update_user_logged_in_time, 1e3 * self.user_logged_in_time_interval
-            )
-            self.user_logged_in_time_callback = pc
             pc.start()
 
         self.log.info("JupyterHub is now running at %s", self.proxy.public_url)
